@@ -61,11 +61,11 @@ We welcome contributions to enhance the PDF Intelligence System. If you're inter
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [Apache License](LICENSE).
 
 ## Acknowledgments
 
-We would like to express our gratitude to the Meta AI researchers for introducing the Retrieval Augmented Generation methodology, the Hugging Face community for the all-MiniLM-L6-v2 Embeddings model, and OpenAI for providing the GPT-3.5 Turbo model through their API.
+We would like to express our gratitude to the Hugging Face community for the all-MiniLM-L6-v2 Embeddings model, and OpenAI for providing the GPT-3.5 Turbo model through their API.
 
 ---
 
