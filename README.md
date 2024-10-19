@@ -1,72 +1,48 @@
-# PDF Intelligence System with Retrieval Augmented Generation (RAG)
+# ChatPDF
 
-## Overview
+A **Streamlit** web application that allows users to upload a PDF file, extract the content, and interact with **Google Gemini AI** to ask questions based on the extracted PDF content and receive AI-generated responses.
 
-The goal of this project is to create a user-centric and intelligent system that enhances information retrieval from PDF documents through natural language queries. The project focuses on streamlining the user experience by developing an intuitive interface, allowing users to interact with PDF content using language they are comfortable with. To achieve this, we leverage the Retrieval Augmented Generation (RAG) methodology introduced by Meta AI researchers.
+## Features
+
+- **PDF File Upload**: Upload a PDF file, and the app extracts its content.
+- **PDF Content Preview**: Preview the extracted text from the uploaded PDF.
+- **Interactive AI Chatbot**: Ask questions based on the PDF content, and Google Gemini AI provides answers.
+- **Response Generation**: The app uses the Google Gemini AI API to generate answers from the PDF.
+
+## How to Use
+
+### 1. Navigate to the project directory:
 
 
-https://github.com/ArmaanSeth/ChatPDF/assets/99117431/2500f636-c66d-46ad-bb68-1d55f04ce753
+### 2. Install required dependencies:
 
 
-## Retrieval Augmented Generation (RAG)
+### 3. Set up Google Gemini API:
 
-### Introduction
+- Sign up for the **Google Gemini API** and obtain your API key.
+- Open the `app.py` file and configure the API key:
 
-RAG is a method designed to address knowledge-intensive tasks, particularly in information retrieval. It combines an information retrieval component with a text generator model to achieve adaptive and efficient knowledge processing. Unlike traditional methods that require retraining the entire model for knowledge updates, RAG allows for fine-tuning and modification of internal knowledge without extensive retraining.
 
-### Workflow
 
-1. **Input**: RAG takes multiple pdf as input.
-2. **VectoreStore**: The pdf's are then converted to vectorstore using FAISS and all-MiniLM-L6-v2 Embeddings model from Hugging Face.
-3. **Memory**: Conversation buffer memory is used to maintain a track of previous conversation which are fed to the llm model along with the user query.
-4. **Text Generation with GPT-3.5 Turbo**: The embedded input is fed to the GPT-3.5 Turbo model from the OpenAI API, which produces the final output.
-5. **User Interface**: Streamlit is used to create the interface for the application.
+Replace `"YourAPIKEY"` with your actual API key.
 
-### Benefits
+### 4. Run the app:
 
-- **Adaptability**: RAG adapts to situations where facts may evolve over time, making it suitable for dynamic knowledge domains.
-- **Efficiency**: By combining retrieval and generation, RAG provides access to the latest information without the need for extensive model retraining.
-- **Reliability**: The methodology ensures reliable outputs by leveraging both retrieval-based and generative approaches.
 
-## Project Features
+### 5. Open a browser and visit:
 
-1. **User-friendly Interface**: An intuitive interface designed to accommodate natural language queries, simplifying the interaction with PDF documents.
 
-2. **Seamless Navigation**: The system streamlines information retrieval, reducing complexity and enhancing the overall user experience.
+## How It Works
 
-## Getting Started
+- **Upload PDF**: The user uploads a PDF file, and the app extracts the text content.
+- **PDF Content Preview**: The first 1500 characters of the extracted text are displayed.
+- **User Question**: The user asks a question related to the PDF content.
+- **AI Response**: The app uses the Google Gemini AI API to generate a response, which is then displayed.
 
-To use the PDF Intelligence System:
+## Dependencies
 
-1. Clone the repository to your local machine.
-   ```bash
-   git clone https://github.com/ArmaanSeth/ChatPDF.git
-   ```
+- **Streamlit**: For building the web app interface.
+- **PyMuPDF (fitz)**: For extracting text from the uploaded PDF.
+- **Google Gemini AI**: For generating responses to user queries.
 
-2. Install dependencies.
-   ```bash
-   pip install -r requirements.txt
-   ```
 
-3. Run the application.
-   ```bash
-   streamlit run app.py
-   ```
-
-4. Open your browser and navigate to `http://localhost:8000` to access the user interface.
-
-## Contributing
-
-We welcome contributions to enhance the PDF Intelligence System. If you're interested in contributing, please follow our [Contribution Guidelines](CONTRIBUTING.md).
-
-## License
-
-This project is licensed under the [Apache License](LICENSE).
-
-## Acknowledgments
-
-We would like to express our gratitude to the Hugging Face community for the all-MiniLM-L6-v2 Embeddings model, and OpenAI for providing the GPT-3.5 Turbo model through their API.
-
----
-
-Feel free to explore and enhance the capabilities of the PDF Intelligence System. Happy querying!

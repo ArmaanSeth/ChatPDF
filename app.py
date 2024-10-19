@@ -1,106 +1,72 @@
-# importing dependencies
-from dotenv import load_dotenv
 import streamlit as st
-from PyPDF2 import PdfReader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import faiss
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
-from langchain.chat_models import ChatOpenAI
-from htmlTemplates import css, bot_template, user_template
+import fitz  # PyMuPDF for PDF extraction
+import google.generativeai as genai
 
-# creating custom template to guide llm model
-custom_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
-Chat History:
-{chat_history}
-Follow Up Input: {question}
-Standalone question:"""
+# Manually pass the API key for Google Gemini API
+genai.configure(api_key="YourAPIKEY")
 
-CUSTOM_QUESTION_PROMPT = PromptTemplate.from_template(custom_template)
-
-# extracting text from pdf
-def get_pdf_text(docs):
-    text=""
-    for pdf in docs:
-        pdf_reader=PdfReader(pdf)
-        for page in pdf_reader.pages:
-            text+=page.extract_text()
-    return text
-
-# converting text to chunks
-def get_chunks(raw_text):
-    text_splitter=CharacterTextSplitter(separator="\n",
-                                        chunk_size=1000,
-                                        chunk_overlap=200,
-                                        length_function=len)   
-    chunks=text_splitter.split_text(raw_text)
-    return chunks
-
-# using all-MiniLm embeddings model and faiss to get vectorstore
-def get_vectorstore(chunks):
-    embeddings=HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2",
-                                     model_kwargs={'device':'cpu'})
-    vectorstore=faiss.FAISS.from_texts(texts=chunks,embedding=embeddings)
-    return vectorstore
-
-# generating conversation chain  
-def get_conversationchain(vectorstore):
-    llm=ChatOpenAI(temperature=0.2)
-    memory = ConversationBufferMemory(memory_key='chat_history', 
-                                      return_messages=True,
-                                      output_key='answer') # using conversation buffer memory to hold past information
-    conversation_chain = ConversationalRetrievalChain.from_llm(
-                                llm=llm,
-                                retriever=vectorstore.as_retriever(),
-                                condense_question_prompt=CUSTOM_QUESTION_PROMPT,
-                                memory=memory)
-    return conversation_chain
-
-# generating response from user queries and displaying them accordingly
-def handle_question(question):
-    response=st.session_state.conversation({'question': question})
-    st.session_state.chat_history=response["chat_history"]
-    for i,msg in enumerate(st.session_state.chat_history):
-        if i%2==0:
-            st.write(user_template.replace("{{MSG}}",msg.content,),unsafe_allow_html=True)
-        else:
-            st.write(bot_template.replace("{{MSG}}",msg.content),unsafe_allow_html=True)
-
-
+# Streamlit interface
 def main():
-    load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs",page_icon=":books:")
-    st.write(css,unsafe_allow_html=True)
-    if "conversation" not in st.session_state:
-        st.session_state.conversation=None
+    st.set_page_config(page_title="Gemini AI Chatbot with PDF Support", page_icon=":robot_face:", layout="wide")
 
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history=None
+    st.title("Gemini AI Chatbot with PDF Support")
+    st.markdown("""
+    This app allows you to upload a PDF file, ask questions based on the PDF content, and get answers using the **Google Gemini AI API**.
+    """)
     
-    st.header("Chat with multiple PDFs :books:")
-    question=st.text_input("Ask question from your document:")
-    if question:
-        handle_question(question)
-    with st.sidebar:
-        st.subheader("Your documents")
-        docs=st.file_uploader("Upload your PDF here and click on 'Process'",accept_multiple_files=True)
-        if st.button("Process"):
-            with st.spinner("Processing"):
-                
-                #get the pdf
-                raw_text=get_pdf_text(docs)
-                
-                #get the text chunks
-                text_chunks=get_chunks(raw_text)
-                
-                #create vectorstore
-                vectorstore=get_vectorstore(text_chunks)
-                
-                #create conversation chain
-                st.session_state.conversation=get_conversationchain(vectorstore)
+    # File upload section
+    st.subheader("Step 1: Upload Your PDF File")
+    uploaded_file = st.file_uploader("Upload a PDF file", type="pdf", label_visibility="collapsed")
+    
+    # If PDF is uploaded
+    if uploaded_file:
+        # PDF Extraction
+        with st.spinner("Extracting text from PDF..."):
+            pdf_text = extract_pdf_text(uploaded_file)
+        
+        # PDF Preview
+        st.subheader("PDF Content Preview")
+        st.text_area("Preview of PDF Content", pdf_text[:1500], height=300)
 
+        # User question input
+        st.subheader("Step 2: Enter Your Question")
+        user_input = st.text_input("Ask a question based on the PDF content:")
 
-if __name__ == '__main__':
+        if st.button("Generate Response"):
+            if user_input:
+                with st.spinner("Generating response..."):
+                    response = generate_response(user_input, pdf_text)
+                    st.subheader("AI Response:")
+                    st.write(response)
+            else:
+                st.warning("Please enter a question to get a response!")
+
+# Extract PDF text function
+def extract_pdf_text(uploaded_file):
+    """Extract text from PDF using PyMuPDF (fitz)."""
+    doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+    pdf_text = ""
+    for page_num in range(len(doc)):
+        page = doc.load_page(page_num)
+        pdf_text += page.get_text("text")
+    return pdf_text
+
+# Generate response function using Google Gemini API
+def generate_response(prompt, pdf_text):
+    """Generate response based on PDF content using Google Gemini API."""
+    try:
+        # Generate a response by combining the PDF content with the user prompt
+        context = f"Here is the content extracted from the PDF:\n\n{pdf_text}\n\nUser's Question: {prompt}\nAnswer:"
+
+        # Use the correct generate_content method for text-only input
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(context)
+
+        # Return the response's text
+        return response.text
+    except Exception as e:
+        return f"Error occurred: {str(e)}"
+
+# Run the app
+if __name__ == "__main__":
     main()
